@@ -172,3 +172,19 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+/.
+/.github/
+/.github/workflows/
+/.github/workflows/287g-tracker.yml
+/.venv/
+/data/
+/.env
+/.gitignore
+/287g_scraper.log
+/api.py
+/index.html
+/main.py
+/package.json
+/README.md
+/requirements.txt
+/node_modules
