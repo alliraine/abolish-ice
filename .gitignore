@@ -180,4 +180,4 @@ cython_debug/
 /data/
 /.env
 /.gitignore
-/http/node_modules
+/http/node_modules/*
