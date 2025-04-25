@@ -17,7 +17,7 @@ export default function AgencyLocator() {
     setResults([]);
     try {
       const params = zip
-        ? \`zipcode=\${zip}\`
+        ? \`zipcode=\${zip}\`g
         : city && state
         ? \`city=\${encodeURIComponent(city)}&state=\${state}\`
         : '';
