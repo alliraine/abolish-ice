@@ -180,11 +180,4 @@ cython_debug/
 /data/
 /.env
 /.gitignore
-/287g_scraper.log
-/api.py
-/index.html
-/main.py
-/package.json
-/README.md
-/requirements.txt
-/node_modules
+/http/node_modules
