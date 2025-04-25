@@ -4,3 +4,14 @@ beautifulsoup4
 openpyxl
 atproto
 load_dotenv
+fastapi
+uvicorn[standard]
+pandas
+openpyxl
+pgeocode
+geopy
+python-multipart
+python-dotenv
+aiofiles
+requests
+fastapi-cors

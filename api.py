@@ -1,0 +1,46 @@
+from fastapi import FastAPI, Query
+from pydantic import BaseModel
+import pandas as pd
+import geopy.distance
+import pgeocode
+
+app = FastAPI()
+
+# Load your dataset
+df_part = pd.read_csv("data/participating_prev.csv")
+df_pend = pd.read_csv("data/pending_prev.csv")
+df_all = pd.concat([df_part, df_pend], ignore_index=True)
+
+# Ensure consistent casing
+df_all.columns = [col.upper() for col in df_all.columns]
+
+# Add geocoded location (this can be cached)
+nomi = pgeocode.Nominatim('us')
+df_all['LOCATION'] = df_all['STATE'] + ' ' + df_all['COUNTY']
+df_all['ZIP_LAT'] = df_all['COUNTY'].apply(lambda c: nomi.query_postal_code(c).latitude)
+df_all['ZIP_LON'] = df_all['COUNTY'].apply(lambda c: nomi.query_postal_code(c).longitude)
+
+@app.get("/agencies/nearby")
+def get_agencies(zipcode: str = Query(None), city: str = Query(None), state: str = Query(None)):
+    if zipcode:
+        center = nomi.query_postal_code(zipcode)
+    elif city and state:
+        center = nomi.query_location(city + ", " + state)
+    else:
+        return {"error": "Please provide either a zipcode or city and state"}
+
+    if pd.isna(center.latitude) or pd.isna(center.longitude):
+        return {"error": "Location could not be resolved."}
+
+    def within_radius(row):
+        if pd.isna(row['ZIP_LAT']) or pd.isna(row['ZIP_LON']):
+            return False
+        dist = geopy.distance.distance(
+            (center.latitude, center.longitude),
+            (row['ZIP_LAT'], row['ZIP_LON'])
+        ).miles
+        return dist <= 35
+
+    matches = df_all[df_all.apply(within_radius, axis=1)]
+
+    return matches[['LAW ENFORCEMENT AGENCY', 'STATE', 'SUPPORT TYPE']].to_dict(orient='records')
