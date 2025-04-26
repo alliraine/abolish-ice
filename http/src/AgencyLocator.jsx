@@ -17,11 +17,11 @@ export default function AgencyLocator() {
     setResults([]);
     try {
       const params = zip
-        ? \`zipcode=\${zip}\`g
-        : city && state
-        ? \`city=\${encodeURIComponent(city)}&state=\${state}\`
-        : '';
-      const res = await fetch(\`/agencies/nearby?\${params}\`);
+          ? `zipcode=${zip}`
+          : city && state
+          ? `city=${encodeURIComponent(city)}&state=${state}`
+          : '';
+      const res = await fetch(`/agencies/nearby?${params}`);
       const data = await res.json();
       if (data.error) {
         setError(data.error);
@@ -66,20 +66,27 @@ export default function AgencyLocator() {
         </Button>
         {error && <p className="text-indigo-400 mt-4 text-center font-medium">{error}</p>}
         <div className="mt-6 grid gap-4">
-          {results.map((agency, idx) => (
-            <Card key={idx} className="bg-gray-800 border-gray-700 text-white shadow-lg hover:shadow-xl transition">
-              <CardContent className="p-4 rounded-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-lg font-semibold text-indigo-300">{agency['LAW ENFORCEMENT AGENCY']}</p>
-                  <span className={\`px-2 py-1 text-xs font-medium rounded-full \${agency['SUPPORT TYPE'] === 'Pending' ? 'bg-yellow-500 text-black' : 'bg-green-500 text-white'}\`}>
-                    {agency['SUPPORT TYPE'] === 'Pending' ? 'Pending' : 'Participating'}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-400">{agency.STATE}</p>
-                <p className="text-sm text-indigo-400">Support Type: {agency['SUPPORT TYPE']}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {results.map((agency, idx) => {
+            const statusClass = agency['SUPPORT TYPE'] === 'Pending'
+              ? 'bg-yellow-500 text-black'
+              : 'bg-green-500 text-white';
+            const statusText = agency['SUPPORT TYPE'] === 'Pending' ? 'Pending' : 'Participating';
+
+            return (
+              <Card key={idx} className="bg-gray-800 border-gray-700 text-white shadow-lg hover:shadow-xl transition">
+                <CardContent className="p-4 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-lg font-semibold text-indigo-300">{agency['LAW ENFORCEMENT AGENCY']}</p>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusClass}`}>
+                      {statusText}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-400">{agency.STATE}</p>
+                  <p className="text-sm text-indigo-400">Support Type: {agency['SUPPORT TYPE']}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </main>
     </div>
