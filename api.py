@@ -53,3 +53,9 @@ def get_agencies(zipcode: str = Query(None), city: str = Query(None), state: str
     matches = df_all[df_all.apply(within_radius, axis=1)]
 
     return matches[['LAW ENFORCEMENT AGENCY', 'STATE', 'SUPPORT TYPE']].to_dict(orient='records')
+
+
+# Run the server if executed directly
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api:app", host="0.0.0.0", port=8080, reload=True)
