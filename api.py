@@ -38,14 +38,14 @@ def get_agencies(zipcode: str = Query(None), city: str = Query(None), state: str
     else:
         return {"error": "Please provide either a zipcode or city and state"}
 
-    if pd.isna(center.latitude) or pd.isna(center.longitude):
+    if pd.isna(center["latitude"]) or pd.isna(center["longitude"]):
         return {"error": "Location could not be resolved."}
 
     def within_radius(row):
         if pd.isna(row['AGENCY_LAT']) or pd.isna(row['AGENCY_LON']):
             return False
         dist = geopy.distance.distance(
-            (center.latitude, center.longitude),
+            (center["latitude"], center["longitude"]),
             (row['AGENCY_LAT'], row['AGENCY_LON'])
         ).miles
         return dist <= 35
