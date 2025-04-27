@@ -17,8 +17,17 @@ df_all.columns = [col.upper() for col in df_all.columns]
 # Add geocoded location (this can be cached)
 nomi = pgeocode.Nominatim('us')
 df_all['LOCATION'] = df_all['STATE'] + ' ' + df_all['COUNTY']
-df_all['ZIP_LAT'] = df_all['COUNTY'].apply(lambda c: nomi.query_postal_code(c).latitude)
-df_all['ZIP_LON'] = df_all['COUNTY'].apply(lambda c: nomi.query_postal_code(c).longitude)
+
+def geocode_agency(row):
+    query = f"{row['LAW ENFORCEMENT AGENCY']}, {row['STATE']}"
+    location = nomi.query_postal_code(query)
+    if pd.isna(location.latitude) or pd.isna(location.longitude):
+        return pd.Series([None, None])
+    else:
+        return pd.Series([location.latitude, location.longitude])
+
+# Geocode each agency using LAW ENFORCEMENT AGENCY and STATE
+df_all[['AGENCY_LAT', 'AGENCY_LON']] = df_all.apply(geocode_agency, axis=1)
 
 @app.get("/agencies/nearby")
 def get_agencies(zipcode: str = Query(None), city: str = Query(None), state: str = Query(None)):
@@ -33,11 +42,11 @@ def get_agencies(zipcode: str = Query(None), city: str = Query(None), state: str
         return {"error": "Location could not be resolved."}
 
     def within_radius(row):
-        if pd.isna(row['ZIP_LAT']) or pd.isna(row['ZIP_LON']):
+        if pd.isna(row['AGENCY_LAT']) or pd.isna(row['AGENCY_LON']):
             return False
         dist = geopy.distance.distance(
             (center.latitude, center.longitude),
-            (row['ZIP_LAT'], row['ZIP_LON'])
+            (row['AGENCY_LAT'], row['AGENCY_LON'])
         ).miles
         return dist <= 35
 
