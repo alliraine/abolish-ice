@@ -21,7 +21,7 @@ export default function AgencyLocator() {
           : city && state
           ? `city=${encodeURIComponent(city)}&state=${state}`
           : '';
-      const res = await fetch(`https://sea-lion-app-ylfwa.ondigitalocean.app/api/agencies/nearby?${params}`);
+      const res = await fetch(`/api/agencies/nearby?${params}`);
       const data = await res.json();
       if (data.error) {
         setError(data.error);
