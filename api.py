@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import pandas as pd
 import geopy.distance
 import pgeocode
+from geopy.geocoders import Nominatim
 
 app = FastAPI()
 
@@ -16,6 +17,7 @@ df_all.columns = [col.upper() for col in df_all.columns]
 
 # Add geocoded location (this can be cached)
 nomi = pgeocode.Nominatim('us')
+geolocator = Nominatim(user_agent="abolish-ice-api")
 df_all['LOCATION'] = df_all['STATE'] + ' ' + df_all['COUNTY']
 
 def geocode_agency(row):
@@ -33,19 +35,24 @@ df_all[['AGENCY_LAT', 'AGENCY_LON']] = df_all.apply(geocode_agency, axis=1)
 def get_agencies(zipcode: str = Query(None), city: str = Query(None), state: str = Query(None)):
     if zipcode:
         center = nomi.query_postal_code(zipcode)
+        if pd.isna(center.latitude) or pd.isna(center.longitude):
+            return {"error": "Location could not be resolved."}
+        center_lat = center.latitude
+        center_lon = center.longitude
     elif city and state:
-        center = nomi.query_location(city + ", " + state)
+        location = geolocator.geocode(f"{city}, {state}")
+        if location is None:
+            return {"error": "Location could not be resolved."}
+        center_lat = location.latitude
+        center_lon = location.longitude
     else:
         return {"error": "Please provide either a zipcode or city and state"}
-
-    if pd.isna(center["latitude"]) or pd.isna(center["longitude"]):
-        return {"error": "Location could not be resolved."}
 
     def within_radius(row):
         if pd.isna(row['AGENCY_LAT']) or pd.isna(row['AGENCY_LON']):
             return False
         dist = geopy.distance.distance(
-            (center["latitude"], center["longitude"]),
+            (center_lat, center_lon),
             (row['AGENCY_LAT'], row['AGENCY_LON'])
         ).miles
         return dist <= 35
